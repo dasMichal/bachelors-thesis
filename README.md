@@ -1,2 +1,2 @@
 # bachelors-thesis
-Repository for my bachelors theis , containing all setup scripts , configs and research 
+Repository for my bachelor's thesis, containing all setup scripts, configurations and research results
