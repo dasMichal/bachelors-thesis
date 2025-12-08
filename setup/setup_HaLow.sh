@@ -34,7 +34,9 @@ check_kernel_version() {
 misc_system_tweaks() {
     echo "Applying miscellaneous system tweaks..."
     # Placeholder for any additional tweaks
-    #add mac80211 to modules load
+    #Add my custom aliases so i dont lose my mind 
+    echo "alias cls ='clear'" >> ~/.bashrc
+
     
 }
 
