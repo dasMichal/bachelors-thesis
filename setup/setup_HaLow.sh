@@ -62,7 +62,7 @@ update_software() {
     echo "Updating repository"
     $SUDO apt update
     echo "Installing required packages"
-    $SUDO apt install -y build-essential dkms git make dnsmasq hostapd device-tree-compiler iptables batctl alfred bridge-utils bc bison flex libssl-dev libncurses5-dev iperf3 picocom screen tracerteoute
+    $SUDO apt install -y build-essential dkms git make dnsmasq hostapd device-tree-compiler iptables batctl alfred bridge-utils bc bison flex libssl-dev libncurses5-dev iperf3 picocom screen traceroute
     echo "Software components updated."
 }
 
