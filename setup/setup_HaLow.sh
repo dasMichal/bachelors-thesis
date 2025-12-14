@@ -15,20 +15,37 @@ is64bit=$(getconf LONG_BIT)
 
 check_kernel_version() {
     echo "Checking kernel version..."
-    required_version="6.1.0"
-    current_version=$(uname -r | cut -d'-' -f1)
-    #check if current_version >= required_version if bigger then need to downgrade
-    if [ "$(printf '%s\n%s' "$required_version" "$current_version" | sort -V | head -n1)" != "$required_version" ]; then
-        echo "Current kernel version ($current_version) is higher than required ($required_version)."
-        echo "Please downgrade the kernel to version $required_version before proceeding."
+    kernel_version=$(uname -r)
+    required_version="6.1.71-v8+"
+    echo "Current kernel version: $kernel_version"
+    if [ "$kernel_version" != "$required_version" ]; then
+        echo "Warning: Kernel version mismatch. Required: $required_version, Found: $kernel_version"
+        echo "Please update your kernel to the required version."
+        echo "Would you like to downgrade now? (y/n)"
+        read -r response
+        if [[ "$response" == "y" || "$response" == "Y" ]];
+        then
+            downgrade_kernel
+        else
+            echo "Exiting setup due to kernel version mismatch."
+            exit 1
+        fi
         exit 1
     else
-        echo "Kernel version is compatible."
+        echo "Kernel version matches the required version."
     fi
 
-    echo "sudo rpi-update 23a2c11685ae13d37b89b5b56a522944e7d96317" 
-    echo " sudo reboot"
 
+}
+
+
+downgrade_kernel() {
+    echo "Downgrading kernel to required version..."
+    $SUDO rpi-update 23a2c11685ae13d37b89b5b56a522944e7d96317
+    $SUDO wget https://raw.githubusercontent.com/RPi-Distro/rpi-source/master/rpi-source -O /usr/bin/rpi-source
+    $SUDO chmod +x /usr/bin/rpi-source
+    rpi-source
+    echo "Kernel downgraded."
 }
 
 misc_system_tweaks() {
@@ -45,7 +62,7 @@ update_software() {
     echo "Updating repository"
     $SUDO apt update
     echo "Installing required packages"
-    $SUDO apt install -y build-essential dkms git make dnsmasq hostapd device-tree-compiler iptables batctl bridge-utils 
+    $SUDO apt install -y build-essential dkms git make dnsmasq hostapd device-tree-compiler iptables batctl alfred bridge-utils bc bison flex libssl-dev libncurses5-dev iperf3 picocom screen tracerteoute
     echo "Software components updated."
 }
 
@@ -75,6 +92,7 @@ setup_nrc_software() {
     $SUDO chmod +x update.sh
     ./update.sh
 }
+
 
 build_new_nrc_kernel_module() {
     echo "--------------------------------"
@@ -151,6 +169,9 @@ main() {
     create_device_tree
     setup_nrc_software
     echo "HaLow setup completed."
+    misc_system_tweaks
+    set_module_autoload
+    echo "Please reboot the system to apply all changes."
     #move the user to nrc_pkg folder
     cd ~/nrc_pkg || { echo "nrc_pkg path missing"; exit 1; }
 
