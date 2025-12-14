@@ -1,7 +1,24 @@
 #!/bin/bash
 
+# Detect sudo requirement
+if [ "$(id -u)" -eq 0 ]; then
+    SUDO=""
+else
+    SUDO="sudo"
+fi
+
+
 # Allow user to specify interface, otherwise auto-detect
 ETH_IFACE="${1:-}"
+#Grab IP from bat0 automatically only after start.py has run and assigned an IP to bat0
+MESH_IP=$(ip -4 addr show bat0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}')
+
+if [ -z "$MESH_IP" ]; then # if MESH_IP is empty
+    echo "[-] Error: bat0 has no IP address! Run start.py first."
+    exit 1
+fi
+
+
 
 # Auto-detect active Ethernet interface if not specified
 if [ -z "$ETH_IFACE" ]; then
@@ -37,13 +54,15 @@ echo "Current Gateway: $GATEWAY"
 echo " Creating bridge br0"
 sudo ip link add name br0 type bridge
 
+
+
 # Add Interfaces
 
 echo " Adding $ETH_IFACE and bat0 to bridge br0"
 sudo ip link set dev "$ETH_IFACE" master br0
 sudo ip link set dev bat0 master br0
 
-# Clone MAC from Ethernet interface
+# Clone MAC from Ethernet interface to Bridge
 
 echo " Cloning MAC address from $ETH_IFACE to br0"
 ETH_MAC=$(cat /sys/class/net/"$ETH_IFACE"/address)
@@ -63,7 +82,42 @@ sudo ip addr flush dev bat0
 
 echo " Assigning IP address $IP_ADDR to br0" 
 #sudo ip addr add 192.168.178.130/24 dev br0
-sudo ip addr add "$IP_ADDR/24" dev br0
+
+sudo ip addr add "$IP_ADDR/24" dev br0 # Network IP on the bridge
+sudo ip addr add "$MESH_IP/24" dev br0 #so we hava also a Mesh local IP on the bridge
 sudo ip link set dev br0 up
 # Set default route via gateway 
 sudo ip route add default via "$GATEWAY" dev br0
+
+# Announce Gateway via batman
+sudo batctl gw_mode server
+
+# Enable IP forwarding
+sudo sysctl -w net.ipv4.ip_forward=1
+
+# Enable NAT for mesh network
+sudo iptables -t nat -A POSTROUTING -s 192.168.10.0/24 -o br0 -j MASQUERADE
+# Allow forwarding between mesh (bat0) and external interface ($ETH_IFACE)
+sudo iptables -A FORWARD -i bat0 -o "$ETH_IFACE" -m state --state RELATED,ESTABLISHED -j ACCEPT
+sudo iptables -A FORWARD -i "$ETH_IFACE" -o bat0 -j ACCEPT
+
+sudo alfred -i br0 -b bat0 -m > /dev/null 2>&1 & # start alfred silent in the background because hes yapping 
+
+AlfredKeyGateway=69
+
+setGateway()
+{
+    echo -n "$MESH_IP" | sudo alfred -s $AlfredKeyGateway
+    echo "[GATEWAY] Published gateway IP to Alfred: $MESH_IP"
+    sleep 300
+
+}
+
+# Run gateway check immediately
+setGateway
+
+# Run gateway check every 5 minutes in background
+while true; do
+    sleep 300  # 5 minutes = 300 seconds
+    setGateway
+done &
