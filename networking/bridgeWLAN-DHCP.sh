@@ -15,11 +15,11 @@ fi
 
 
 
-# Extract the last octet (e.g., "2" from "192.168.10.2") to determine NODE_ID 
+# Extract the last octet (z.b. 2 from 192.168.10.2) to determine NODE_ID 
 NODE_ID=$(echo $MESH_IP | awk -F. '{print $4}') # get last octet
 IP_BASE=$(echo $MESH_IP | awk -F. '{print $1"."$2"."$3}') # get first three octets 
 
-# Calculate DHCP Range: .X0 - .X9 (e.g. Node 2 serves .20-.29)
+# Calculate DHCP Range: .X0 - .X9 (z.b Node 2 serves .20-.29)
 DHCP_START="${IP_BASE}.${NODE_ID}0" 
 DHCP_END="${IP_BASE}.${NODE_ID}9"
 
@@ -27,7 +27,6 @@ echo "[*] Detected Node IP: ${MESH_IP} (ID: ${NODE_ID})"
 
 # Create Bridge
 ip link add name br0 type bridge
-
 
 
 # Add Ports 
@@ -64,9 +63,13 @@ echo "[+] Bridge UP. IP: ${MESH_IP}. DHCP Range: ${DHCP_START}-${DHCP_END}"
 sudo batctl gwl client
 echo "[*] Set batman-adv gateway mode to client."
 
-sudo alfred -i br0 -b bat0  > /dev/null 2>&1 & # Start alfred silent in background
+#sudo alfred -i br0 -b bat0  > /dev/null 2>&1 & # Start alfred silent in background
 
-AlfredKeyGateway=69
+#AlfredKeyGateway=69
+
+
+sudo ./runAlfred.sh
+
 
 
 # Function to check and update gateway
@@ -75,6 +78,7 @@ checkGateway() {
 
     if [ -z "$GATEWAY_IP" ]; then
         echo "[-] No gateway announced via Alfred. Clients will have no internet."
+
     else
         echo "[+] Gateway from Alfred: $GATEWAY_IP"
         sudo ip route replace default via $GATEWAY_IP dev br0
@@ -82,13 +86,13 @@ checkGateway() {
 }
 
 # Run gateway check immediately
-checkGateway
+#checkGateway
 
 # Run gateway check every 5 minutes in background
-while true; do
-    sleep 300  # 5 minutes = 300 seconds
-    checkGateway
-done &
+#while true; do
+#    sleep 300  # 5 minutes = 300 seconds
+#    checkGateway
+#done &
 
 
 
