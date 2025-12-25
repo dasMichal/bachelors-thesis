@@ -26,7 +26,31 @@ DHCP_END="${IP_BASE}.${NODE_ID}9"
 echo "[*] Detected Node IP: ${MESH_IP} (ID: ${NODE_ID})"
 
 # Create Bridge
-ip link add name br0 type bridge
+sudo ip link add name br0 type bridge
+
+echo "[*] Configuring multicast optimizations..."
+
+# Aktiviere Multicast Snooping (lernt welche Ports welche Gruppen wollen)
+sudo ip link set br0 type bridge mcast_snooping 1
+
+# Aktiviere IGMP Querier (sendet periodische IGMP Queries)
+sudo ip link set br0 type bridge mcast_querier 1
+
+# Nutze Bridge-IP als Querier Source Address
+sudo ip link set br0 type bridge mcast_query_use_ifaddr 1
+
+# Aktiviere Multicast-Statistiken für Debugging
+sudo ip link set br0 type bridge mcast_stats_enabled 1
+
+# IGMPv3 für bessere Multicast-Effizienz (ATAK & Codec2 kompatibel)
+sudo ip link set br0 type bridge mcast_igmp_version 3
+
+# Optional: Last-Member Query Intervall reduzieren (schnelleres Leave)
+sudo ip link set br0 type bridge mcast_last_member_interval 100  # 1 Sekunde
+
+echo "[+] Multicast snooping & querier enabled on br0"
+
+
 
 
 # Add Ports 
@@ -58,9 +82,10 @@ EOF
 killall dnsmasq 2>/dev/null
 dnsmasq -C /tmp/dnsmasq-mesh.conf
 echo "[+] Bridge UP. IP: ${MESH_IP}. DHCP Range: ${DHCP_START}-${DHCP_END}"
+sudo ip route replace default via 192.168.10.3 dev br0 ## 
 
 
-sudo batctl gwl client
+sudo batctl gw_mode client
 echo "[*] Set batman-adv gateway mode to client."
 
 #sudo alfred -i br0 -b bat0  > /dev/null 2>&1 & # Start alfred silent in background
@@ -68,7 +93,7 @@ echo "[*] Set batman-adv gateway mode to client."
 #AlfredKeyGateway=69
 
 
-sudo ./runAlfred.sh
+#sudo ./runAlfred.sh & 
 
 
 

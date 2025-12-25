@@ -1,0 +1,19 @@
+[Unit]
+Description= Start HaLow Mesh on startup
+After=network.target
+
+
+[Service]
+User=michal
+Environment=HOME=/home/michal
+Environment=USER=michal
+Environment=LOGNAME=michal
+WorkingDirectory=/home/michal
+ExecStart=/usr/bin/startMesh.sh
+
+Type=oneshot
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+

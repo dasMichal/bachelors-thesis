@@ -53,6 +53,11 @@ misc_system_tweaks() {
     # Placeholder for any additional tweaks
     #Add my custom aliases so i dont lose my mind 
     echo "alias cls ='clear'" >> ~/.bashrc
+    sudo cp smcroute.conf /etc/smcroute.conf
+    #sudo systemctl restart smcroute
+
+
+    echo "System tweaks applied."
 
     
 }
@@ -62,7 +67,7 @@ update_software() {
     echo "Updating repository"
     $SUDO apt update
     echo "Installing required packages"
-    $SUDO apt install -y build-essential dkms git make dnsmasq hostapd device-tree-compiler iptables batctl alfred bridge-utils bc bison flex libssl-dev libncurses5-dev iperf3 picocom screen traceroute
+    $SUDO apt install -y build-essential dkms git make dnsmasq hostapd device-tree-compiler iptables batctl alfred bridge-utils bc bison flex libssl-dev libncurses5-dev iperf3 picocom screen traceroute smcroute
     echo "Software components updated."
 }
 

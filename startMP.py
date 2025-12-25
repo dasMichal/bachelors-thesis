@@ -17,17 +17,26 @@ def main(interface, gateway=False, mobile=False):
         print("No interface IP . Please provide one with --ip")
         sys.exit(1)
     
-    if not 
+
 
     print(f"Starting HaLow MeshPoint setup for user: {USER_NAME}")
     print("Stopping wpa_supplicant service to avoid conflicts with onboard Wi-Fi chip")
+
+
     os.system("sudo systemctl stop wpa_supplicant  ")
     #os.system("sudo systemctl stop NetworkManager ")
+    
     os.system("python ~/nrc_pkg/scripts/start.py 4 0 EU 1 "+interface+" &")
     # wait a bit for the script to start and get settled 
     print("Waiting for MeshPoint to initialize...")
     time.sleep(20)
-
+    print("MeshPoint should be initialized now.")
+    if gateway:
+        print ("Setting up as Gateway Node...")
+        os.system("sudo ~/bachelors-thesis/networking/setBridge.sh")
+    if mobile:
+        print ("Setting up as Mobile Node with WiFi SoftAP...")
+        os.system("sudo ~/bachelors-thesis/networking/bridgeWLAN-DHCP.sh")
     
 
 

@@ -1,0 +1,1 @@
+screen  -S AlfredBG-Master -dm sudo alfred -i br0 -b bat0 -m

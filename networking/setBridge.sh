@@ -54,6 +54,16 @@ echo "Current Gateway: $GATEWAY"
 echo " Creating bridge br0"
 sudo ip link add name br0 type bridge
 
+echo "  Configuring multicast optimizations for gateway..."
+
+sudo ip link set br0 type bridge mcast_snooping 1
+sudo ip link set br0 type bridge mcast_querier 1
+sudo ip link set br0 type bridge mcast_query_use_ifaddr 1
+sudo ip link set br0 type bridge mcast_stats_enabled 1
+sudo ip link set br0 type bridge mcast_igmp_version 3
+
+echo "  Multicast querier and snooping enable
+
 
 
 # Add Interfaces

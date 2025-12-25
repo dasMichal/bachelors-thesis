@@ -1,0 +1,1 @@
+screen  -S AlfredBG-Client -dm sudo alfred -i br0 -b bat0
