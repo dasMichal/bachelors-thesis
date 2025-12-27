@@ -9,7 +9,7 @@ sudo hostapd -B /etc/hostapd/hostapd.conf > /dev/null 2>&1
 MESH_IP=$(ip -4 addr show bat0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}')
 
 if [ -z "$MESH_IP" ]; then # if MESH_IP is empty
-    echo "[-] Error: bat0 has no IP address! Run start.py first."
+    echo "Error: bat0 has no IP address! Run start.py first."
     exit 1
 fi
 
@@ -23,12 +23,12 @@ IP_BASE=$(echo $MESH_IP | awk -F. '{print $1"."$2"."$3}') # get first three octe
 DHCP_START="${IP_BASE}.${NODE_ID}0" 
 DHCP_END="${IP_BASE}.${NODE_ID}9"
 
-echo "[*] Detected Node IP: ${MESH_IP} (ID: ${NODE_ID})"
+echo "Detected Node IP: ${MESH_IP} (ID: ${NODE_ID})"
 
 # Create Bridge
 sudo ip link add name br0 type bridge
 
-echo "[*] Configuring multicast optimizations..."
+echo "Configuring multicast optimizations..."
 
 # Aktiviere Multicast Snooping (lernt welche Ports welche Gruppen wollen)
 sudo ip link set br0 type bridge mcast_snooping 1
@@ -48,7 +48,7 @@ sudo ip link set br0 type bridge mcast_igmp_version 3
 # Optional: Last-Member Query Intervall reduzieren (schnelleres Leave)
 sudo ip link set br0 type bridge mcast_last_member_interval 100  # 1 Sekunde
 
-echo "[+] Multicast snooping & querier enabled on br0"
+echo "Multicast snooping & querier enabled on br0"
 
 
 
@@ -58,9 +58,9 @@ echo "[+] Multicast snooping & querier enabled on br0"
 # Exclude bat0 and lo and wlan0 (HaLow adaper)
 AP_IFACE=$(ls /sys/class/net | grep -E '^(wlan[^0]|wlx|onboard)' | grep -v bat | head -1) # I LOVE REGEXS <3
 if [ -z "$AP_IFACE" ]; then
-    echo "[-] Warning: No SoftAP interface found! creating bridge with bat0 only."
+    echo "Warning: No SoftAP interface found! creating bridge with bat0 only."
 else
-    echo "[*] Adding SoftAP interface: ${AP_IFACE}"
+    echo "Adding SoftAP interface: ${AP_IFACE}"
     ip link set dev $AP_IFACE master br0
 fi
 
@@ -86,38 +86,13 @@ sudo ip route replace default via 192.168.10.3 dev br0 ##
 
 
 sudo batctl gw_mode client
-echo "[*] Set batman-adv gateway mode to client."
+echo "Set batman-adv gateway mode to client."
 
 #sudo alfred -i br0 -b bat0  > /dev/null 2>&1 & # Start alfred silent in background
 
 #AlfredKeyGateway=69
 
 
-#sudo ./runAlfred.sh & 
-
-
-
-# Function to check and update gateway
-checkGateway() {
-    GATEWAY_IP=$(sudo alfred -r $AlfredKeyGateway | grep -oP '"\d+(\.\d+){3}"' | tr -d '"')
-
-    if [ -z "$GATEWAY_IP" ]; then
-        echo "[-] No gateway announced via Alfred. Clients will have no internet."
-
-    else
-        echo "[+] Gateway from Alfred: $GATEWAY_IP"
-        sudo ip route replace default via $GATEWAY_IP dev br0
-    fi
-}
-
-# Run gateway check immediately
-#checkGateway
-
-# Run gateway check every 5 minutes in background
-#while true; do
-#    sleep 300  # 5 minutes = 300 seconds
-#    checkGateway
-#done &
 
 
 

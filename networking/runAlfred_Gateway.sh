@@ -8,7 +8,7 @@ sleep 5
 setGateway()
 {
     echo -n "$MESH_IP" | sudo alfred -s $AlfredKeyGateway
-    echo "[GATEWAY] Published gateway IP to Alfred: $MESH_IP"
+    echo "Published gateway IP to Alfred: $MESH_IP"
     sleep $SleepAmount
 
 }
